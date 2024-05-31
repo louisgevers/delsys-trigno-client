@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "delsys_trigno_client"
+version = "0.0.0"
+description = "A TCP/IP client for the Delsys Trigno System Server"
+authors = [
+    { name = "Louis Gevers", email = "louis.gevers@epfl.ch" }
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.9"

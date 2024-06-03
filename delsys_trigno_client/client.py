@@ -17,7 +17,8 @@ class TrignoClient:
                 (digital_server_ip, port.value), timeout=timeout
             )
         # First response is protocol version
-        self._protocol_version = self._receive_response(TrignoPort.COMMAND)
+        protocol_version = self._receive_response(TrignoPort.COMMAND)
+        print(f"Connected: {protocol_version}")
         # Make connection master
         self._send_command("MASTER")
 
@@ -35,8 +36,11 @@ class TrignoClient:
         return "COMPLETE" in resp
 
     def close(self):
-        for socket in self._sockets.values():
-            socket.close()
+        try:
+            self._send_command("QUIT")
+        finally:
+            for socket in self._sockets.values():
+                socket.close()
 
     def _send_command(self, command: str):
         message = f"{command}\r\n\r\n"

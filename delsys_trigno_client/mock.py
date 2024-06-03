@@ -127,13 +127,19 @@ class MockDelsysStation:
         self._acquiring = True
         print_debug(f"Starting acquisition ({nchannels} channels)")
         with connection:
+            target_time = 1 / DATA_FREQUENCY
+            last_time = time.time()
             while self._acquiring:
                 data = np.random.rand(nchannels).astype(np.float32)
-                package = ""
+                packet = bytes()
                 for value in data:
-                    package = struct.pack("<f", value)
-                connection.sendall(package)
-                # TODO sleep to get at 4000 Hz
+                    packet = struct.pack("<f", value)
+                connection.sendall(packet)
+                # Emit at desired frequency
+                diff = target_time - (time.time() - last_time)
+                if diff > 0:
+                    time.sleep(diff)
+                last_time = time.time()
         print_debug(f"Finished acquisition ({nchannels} channels)")
 
     def _respond_command(self, response: str):

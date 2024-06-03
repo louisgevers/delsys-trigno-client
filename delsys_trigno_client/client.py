@@ -22,6 +22,12 @@ class TrignoClient:
         # Make connection master
         self._send_command("MASTER")
 
+    def start_acquisition(self):
+        self._send_command("START")
+
+    def stop_acquisition(self):
+        self._send_command("STOP")
+
     def is_sensor_paired(self, id: int) -> bool:
         resp = self._send_command(f"SENSOR {id} PAIRED?")
         return resp == "YES"

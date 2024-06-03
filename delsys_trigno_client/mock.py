@@ -9,9 +9,9 @@ from delsys_trigno_client.constants import (
     TrignoPort,
     EMG_DATA_CHANNELS,
     AUX_DATA_CHANNELS,
+    EMG_SAMPLE_RATE,
+    AUX_SAMPLE_RATE,
 )
-
-DATA_FREQUENCY = 4_000  # Hz
 
 
 def print_warning(message: str):
@@ -105,10 +105,12 @@ class MockDelsysStation:
             return "NEW MASTER"
         elif command == "START":
             self._thread_emg = threading.Thread(
-                target=self._start_data_loop, args=(self._client_emg, EMG_DATA_CHANNELS)
+                target=self._start_data_loop,
+                args=(self._client_emg, EMG_DATA_CHANNELS, EMG_SAMPLE_RATE),
             )
             self._thread_aux = threading.Thread(
-                target=self._start_data_loop, args=(self._client_aux, AUX_DATA_CHANNELS)
+                target=self._start_data_loop,
+                args=(self._client_aux, AUX_DATA_CHANNELS, AUX_SAMPLE_RATE),
             )
             self._thread_emg.start()
             self._thread_aux.start()
@@ -123,19 +125,21 @@ class MockDelsysStation:
             print_warning(f"Unknown command: {command}")
             return "INVALID COMMAND"
 
-    def _start_data_loop(self, connection: socket.socket, nchannels: int):
+    def _start_data_loop(
+        self, connection: socket.socket, nchannels: int, sample_rate: float
+    ):
         self._acquiring = True
         print_debug(f"Starting acquisition ({nchannels} channels)")
         with connection:
-            target_time = 1 / DATA_FREQUENCY
+            target_time = 1 / sample_rate
             last_time = time.time()
             while self._acquiring:
-                data = np.random.rand(nchannels).astype(np.float32)
+                data = np.random.random(nchannels).astype(np.float32)
                 packet = bytes()
                 for value in data:
-                    packet = struct.pack("<f", value)
+                    packet += struct.pack("<f", value)
                 connection.sendall(packet)
-                # Emit at desired frequency
+                # Emit at desired frequency
                 diff = target_time - (time.time() - last_time)
                 if diff > 0:
                     time.sleep(diff)

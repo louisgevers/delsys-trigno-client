@@ -10,6 +10,8 @@ from delsys_trigno_client.constants import (
     DEFAULT_DIGITAL_SERVER_IP,
     EMG_DATA_CHANNELS,
     AUX_DATA_CHANNELS,
+    EMG_SAMPLE_RATE,
+    AUX_SAMPLE_RATE,
 )
 
 
@@ -50,10 +52,14 @@ class TrignoClient:
         return "COMPLETE" in resp
 
     def get_readings_emg(self, max_size: int = np.inf) -> np.ndarray:
-        return self._read_data(TrignoPort.EMG_DATA, EMG_DATA_CHANNELS, max_size)
+        return self._read_data(
+            TrignoPort.EMG_DATA, EMG_DATA_CHANNELS, 1 / EMG_SAMPLE_RATE, max_size
+        )
 
     def get_readings_aux(self, max_size: int = np.inf) -> np.ndarray:
-        return self._read_data(TrignoPort.AUX_DATA, AUX_DATA_CHANNELS, max_size)
+        return self._read_data(
+            TrignoPort.AUX_DATA, AUX_DATA_CHANNELS, 1 / AUX_SAMPLE_RATE, max_size
+        )
 
     def close(self):
         try:
@@ -73,7 +79,7 @@ class TrignoClient:
         return self._sockets[port].recv(1024).decode("ascii").strip()
 
     def _read_data(
-        self, port: TrignoPort, nchannels: float, max_size: int
+        self, port: TrignoPort, nchannels: float, timestep: float, max_size: int
     ) -> np.ndarray:
         packet = bytes()
         remaining_bytes = 0
@@ -96,4 +102,6 @@ class TrignoClient:
                 break
         nsamples = int(len(packet) / expected_size) * nchannels
         data = struct.unpack("<" + "f" * nsamples, packet)
-        return np.array(data, dtype=np.float32).reshape((nchannels, -1))
+        data = np.array(data, dtype=np.float32).reshape((nchannels, -1))
+        timesteps = np.arange(data.shape[1]) * timestep
+        return np.vstack((timesteps, data))

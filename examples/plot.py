@@ -17,7 +17,9 @@ def plot_readings(debug: bool, duration: float, ids: list[int]):
 
     emg_data = client.get_readings_emg()
     for id in ids:
-        plt.plot(emg_data[id - 1, :], label=f"sensor_{id}")
+        plt.plot(emg_data[0, :], emg_data[id, :], label=f"sensor_{id}")
+    plt.xlabel("time [s]")
+    plt.ylabel("EMG [mV]")
     plt.legend()
     plt.show()
 

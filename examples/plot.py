@@ -9,11 +9,15 @@ from delsys_trigno_client import TrignoClient
 def plot_readings(debug: bool, duration: float, ids: list[int]):
     client = TrignoClient(digital_server_ip="localhost") if debug else TrignoClient()
     
-    print("Starting acquisition")
+    start = time.time()
     client.start_acquisition()
+    delay = time.time() - start
+    print(f"Started acquisition [{delay * 1_000:.2f}ms response time]")
     time.sleep(duration)
-    print("Stopping acquisition")
+    elapsed = time.time() - start
+    print(f"Stopping [{elapsed:.2f}s elapsed]")
     client.stop_acquisition()
+    print(f"Stopped acquisition [{delay * 1_000:.2f}ms response time]")
 
     emg_data = client.get_readings_emg()
     for id in ids:

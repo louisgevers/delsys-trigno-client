@@ -1,6 +1,7 @@
 import time
 import pandas as pd
-from delsys_trigno_client.client import TrignoClient
+
+from delsys_trigno_client import TrignoClient
 
 
 def run_client():

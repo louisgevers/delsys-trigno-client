@@ -49,11 +49,11 @@ class TrignoClient:
         resp = self._receive_response(TrignoPort.COMMAND)
         return "COMPLETE" in resp
 
-    def get_readings_emg(self) -> np.ndarray:
-        return self._read_data(TrignoPort.EMG_DATA, EMG_DATA_CHANNELS)
+    def get_readings_emg(self, max_size: int = np.inf) -> np.ndarray:
+        return self._read_data(TrignoPort.EMG_DATA, EMG_DATA_CHANNELS, max_size)
 
-    def get_readings_aux(self) -> np.ndarray:
-        return self._read_data(TrignoPort.AUX_DATA, AUX_DATA_CHANNELS)
+    def get_readings_aux(self, max_size: int = np.inf) -> np.ndarray:
+        return self._read_data(TrignoPort.AUX_DATA, AUX_DATA_CHANNELS, max_size)
 
     def close(self):
         try:
@@ -72,7 +72,9 @@ class TrignoClient:
         select.select([self._sockets[port]], [], [])
         return self._sockets[port].recv(1024).decode("ascii").strip()
 
-    def _read_data(self, port: TrignoPort, nchannels: float) -> np.ndarray:
+    def _read_data(
+        self, port: TrignoPort, nchannels: float, max_size: int
+    ) -> np.ndarray:
         packet = bytes()
         remaining_bytes = 0
         expected_size = nchannels * BYTES_PER_CHANNEL
@@ -84,6 +86,8 @@ class TrignoClient:
                 # Packets should be processed per block of channels
                 if len(packet) % expected_size != 0:
                     remaining_bytes = expected_size - len(packet) % expected_size
+                elif len(packet) >= max_size * expected_size:
+                    break
                 elif len(msg) == 0:  # Nothing to receive anymore
                     packet += b"\x00" * remaining_bytes
                     break

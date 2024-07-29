@@ -102,6 +102,6 @@ class TrignoClient:
                 break
         nsamples = int(len(packet) / expected_size) * nchannels
         data = struct.unpack("<" + "f" * nsamples, packet)
-        data = np.array(data, dtype=np.float32).reshape((nchannels, -1))
+        data = np.array(data, dtype=np.float32).reshape((-1, nchannels)).T
         timesteps = np.arange(data.shape[1]) * timestep
         return np.vstack((timesteps, data))
